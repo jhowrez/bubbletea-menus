@@ -1,0 +1,8 @@
+command:
+  build: go build -o ./tmp/tui.run ./cmd/test1
+  exec: /home/master/dev/tests/bubbletea-multiview/tmp/tui.run
+
+watch:
+  folders:
+    - "./cmd/test1"
+    - "./pkg"
