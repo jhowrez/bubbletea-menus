@@ -5,64 +5,28 @@ import (
 	"os"
 
 	menus "github.com/beowulf20/bubbletea-menus"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
-
-var (
-	docStyle = lipgloss.NewStyle().Margin(2, 2)
-)
-
-type SampleM struct {
-	Text string
-
-	VP         viewport.Model
-	ViewWidth  int
-	ViewHeight int
-}
-
-func (m SampleM) Init() tea.Cmd {
-	return nil
-}
-
-func (bm SampleM) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		bm.ViewWidth, bm.ViewHeight = msg.Width, msg.Height
-		bm.Text = fmt.Sprintf("%dx%d", bm.ViewWidth, bm.ViewHeight)
-		bm.VP.Width = bm.ViewWidth
-		bm.VP.Height = bm.ViewHeight
-	case tea.KeyMsg:
-		bm.Text = msg.String()
-	}
-	bm.VP, cmd = bm.VP.Update(msg)
-	return bm, cmd
-}
-func (m SampleM) View() string {
-	m.VP.SetContent(m.Text)
-	return m.VP.View()
-}
 
 func main() {
+	sampleModel := NewSampleModel()
 
-	sampleModel := SampleM{
-		Text: "Device A Description",
-		VP:   viewport.New(0, 0),
-	}
-	sampleStyle := sampleModel.VP.
-		Style.
-		Border(lipgloss.NormalBorder(), true, true, true)
-	sampleModel.VP.Style = sampleStyle
-
-	aquaMenu := menus.NewBubbleMenu(
-		"Aqua Menu",
-		menus.NewBubbleMenuEntry("Device A", sampleModel),
+	subMenu1 := menus.NewBubbleMenu(
+		"Sub Menu 1",
+		menus.NewBubbleMenuEntry("Tool A", sampleModel),
+		menus.NewBubbleMenuEntry("Tool B", sampleModel),
 	)
+
+	subMenu2 := menus.NewBubbleMenu(
+		"Sub Menu 2",
+		menus.NewBubbleMenuEntry("Tool C", sampleModel),
+		menus.NewBubbleMenuEntry("Tool D", sampleModel),
+	)
+
 	mainMenu := menus.NewBubbleMenu(
 		"Main Menu",
-		menus.NewBubbleMenuEntry("Aqua Menu", aquaMenu),
+		menus.NewBubbleMenuEntry("Sub Menu 1", subMenu1),
+		menus.NewBubbleMenuEntry("Sub Menu 2", subMenu2),
 	)
 
 	p := tea.NewProgram(ModelResetOnResize{Content: mainMenu},

@@ -5,8 +5,9 @@ import (
 )
 
 type BubbleMenuEntry struct {
-	Name    string
-	Content tea.Model
+	Name      string
+	Content   tea.Model
+	menuIndex int
 }
 
 func (bm BubbleMenuEntry) Title() string       { return bm.Name }

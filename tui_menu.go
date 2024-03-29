@@ -3,6 +3,8 @@ package menus
 import (
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -24,21 +26,30 @@ type BubbleMenu struct {
 	// behaviour properties
 	ResetOnBack             bool
 	HandleGoBackForChildren bool
+	IsFilteringEnabled      bool
+
+	//
+	keyMap MenuKeyMap
 }
 
 func NewBubbleMenu(title string, children ...BubbleMenuEntry) BubbleMenu {
 	items := []list.Item{}
 	childrenContent := []tea.Model{}
-	for _, child := range children {
+	for i, child := range children {
+		child.menuIndex = i
 		items = append(items, child)
 		childrenContent = append(childrenContent, child.Content)
 	}
 
 	menuEntryList := list.New(items, list.NewDefaultDelegate(), 0, 0)
-	menuEntryList.DisableQuitKeybindings()
 	menuEntryList.Title = title
 
-	return BubbleMenu{
+	menuEntryList.SetShowStatusBar(false)
+	menuEntryList.SetShowHelp(true)
+	menuEntryList.DisableQuitKeybindings()
+	menuEntryList.SetFilteringEnabled(true)
+
+	bm := BubbleMenu{
 		title:             title,
 		desc:              title,
 		children:          childrenContent,
@@ -46,7 +57,29 @@ func NewBubbleMenu(title string, children ...BubbleMenuEntry) BubbleMenu {
 		selectedMenuEntry: -1,
 
 		HandleGoBackForChildren: true,
+		IsFilteringEnabled:      true,
 	}
+
+	{
+		// help keys
+		bm.keyMap = DefaultMenuKeyMap()
+		bm.menuEntryList.AdditionalFullHelpKeys = func() []key.Binding {
+			return []key.Binding{
+				bm.keyMap.EnterView,
+				bm.keyMap.ExitView,
+				bm.keyMap.ForceQuit,
+			}
+		}
+
+		bm.menuEntryList.AdditionalShortHelpKeys = func() []key.Binding {
+			return []key.Binding{
+				bm.keyMap.EnterView,
+				bm.keyMap.ExitView,
+			}
+		}
+	}
+
+	return bm
 }
 
 func (bm BubbleMenu) Init() tea.Cmd {
@@ -67,17 +100,34 @@ func (bm BubbleMenu) View() string {
 }
 
 func (bm *BubbleMenu) ResetActiveView() {
+	if bm.selectedMenuEntry == -1 {
+		return
+	}
+
 	if bm.ResetOnBack {
+		bm.menuEntryList.ResetFilter()
 		bm.menuEntryList.ResetSelected()
 	}
 	bm.selectedMenuEntry = -1
+
+	if bm.IsFilteringEnabled {
+		bm.menuEntryList.SetFilteringEnabled(true)
+	}
+
+	bm.menuEntryList.Help.ShowAll = false
+}
+
+func (bm *BubbleMenu) SelectActiveView(i int) {
+	bm.selectedMenuEntry = i
+
+	if bm.IsFilteringEnabled {
+		bm.menuEntryList.SetFilteringEnabled(false)
+	}
 }
 
 func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
-	bm.menuEntryList, cmd = bm.menuEntryList.Update(msg)
-	cmds = append(cmds, cmd)
 
 	{
 		// update size for all children
@@ -104,6 +154,8 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					for _, cmd := range batchCmds {
 						if _, ok := cmd().(BubbleMenuBackMsg); ok {
 							bm.ResetActiveView()
+						} else {
+							cmds = append(cmds, cmd)
 						}
 					}
 				} else if _, ok := cmd().(BubbleMenuBackMsg); ok {
@@ -118,32 +170,53 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					// handle specific events for children
 					switch msg := msg.(type) {
 					case tea.KeyMsg:
-						switch msg.String() {
-						case "left":
+						if key.Matches(msg, bm.keyMap.ExitView) {
 							bm.ResetActiveView()
 						}
 					}
 				}
 			}
-
 			return bm, tea.Batch(cmds...)
 		}
 	}
 
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			return bm, tea.Quit
-		case "right":
-			if bm.menuEntryList.SelectedItem() != nil {
-				bm.selectedMenuEntry = bm.menuEntryList.Index()
+	if bm.menuEntryList.FilterState() != list.Filtering {
+		switch msg := msg.(type) {
+		case tea.KeyMsg:
+			if key.Matches(msg, bm.keyMap.EnterView) {
+				if bm.menuEntryList.SelectedItem() != nil {
+					entryItem := bm.menuEntryList.SelectedItem().(BubbleMenuEntry)
+					bm.SelectActiveView(entryItem.menuIndex)
+				}
+				return bm, tea.ClearScreen
 			}
-			return bm, tea.ClearScreen
-		case "left":
-			return bm, BubbleMenuBack
+
+			if key.Matches(msg, bm.keyMap.ExitView) {
+				bm.ResetActiveView()
+				return bm, BubbleMenuBack
+			}
+			if key.Matches(msg, bm.keyMap.ForceQuit) {
+				return bm, tea.Quit
+			}
 		}
 	}
 
+	{
+		// update list
+		bm.menuEntryList, cmd = bm.menuEntryList.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+
 	return bm, tea.Batch(cmds...)
+}
+
+func (bm *BubbleMenu) SetListStyle(listStyles list.Styles, itemStyles list.DefaultItemStyles) {
+	bm.menuEntryList.Styles = listStyles
+	del := list.NewDefaultDelegate()
+	del.Styles = itemStyles
+	bm.menuEntryList.SetDelegate(del)
+}
+
+func (bm *BubbleMenu) SetHelpStyle(styles help.Styles) {
+	bm.menuEntryList.Help.Styles = styles
 }
