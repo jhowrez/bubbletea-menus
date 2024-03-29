@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	menus "github.com/beowulf20/bubbletea-menus"
 	tea "github.com/charmbracelet/bubbletea"
+	menus "github.com/jhowrez/bubbletea-menus"
 )
 
 func main() {

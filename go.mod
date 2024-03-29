@@ -1,4 +1,4 @@
-module github.com/beowulf20/bubbletea-menus
+module github.com/jhowrez/bubbletea-menus
 
 go 1.22.0
 
