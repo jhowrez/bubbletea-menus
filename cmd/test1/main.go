@@ -13,20 +13,20 @@ func main() {
 
 	subMenu1 := menus.NewBubbleMenu(
 		"Sub Menu 1",
-		menus.NewBubbleMenuEntry("Tool A", sampleModel),
-		menus.NewBubbleMenuEntry("Tool B", sampleModel),
+		menus.NewBubbleMenuEntry("Tool A", sampleModel, "Tooling for Subsystem A"),
+		menus.NewBubbleMenuEntry("Tool B", sampleModel, "Tooling for Subsystem B"),
 	)
 
 	subMenu2 := menus.NewBubbleMenu(
 		"Sub Menu 2",
-		menus.NewBubbleMenuEntry("Tool C", sampleModel),
-		menus.NewBubbleMenuEntry("Tool D", sampleModel),
+		menus.NewBubbleMenuEntry("Tool C", sampleModel, "Tooling C"),
+		menus.NewBubbleMenuEntry("Tool D", sampleModel, "Tooling D"),
 	)
 
 	mainMenu := menus.NewBubbleMenu(
 		"Main Menu",
-		menus.NewBubbleMenuEntry("Sub Menu 1", subMenu1),
-		menus.NewBubbleMenuEntry("Sub Menu 2", subMenu2),
+		menus.NewBubbleMenuEntry("Sub Menu 1", subMenu1, "Tools for A and B"),
+		menus.NewBubbleMenuEntry("Sub Menu 2", subMenu2, "Tools for C and D"),
 	)
 
 	p := tea.NewProgram(ModelResetOnResize{Content: mainMenu},
