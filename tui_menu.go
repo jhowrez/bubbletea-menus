@@ -30,6 +30,9 @@ type BubbleMenu struct {
 
 	//
 	keyMap MenuKeyMap
+
+	//
+	isShouldResetView bool
 }
 
 func NewBubbleMenu(title string, children ...BubbleMenuEntry) BubbleMenu {
@@ -100,6 +103,7 @@ func (bm BubbleMenu) View() string {
 }
 
 func (bm *BubbleMenu) ResetActiveView() {
+	bm.isShouldResetView = false
 	if bm.selectedMenuEntry == -1 {
 		return
 	}
@@ -118,6 +122,7 @@ func (bm *BubbleMenu) ResetActiveView() {
 }
 
 func (bm *BubbleMenu) SelectActiveView(i int) {
+	bm.isShouldResetView = false
 	bm.selectedMenuEntry = i
 
 	if bm.IsFilteringEnabled {
@@ -146,36 +151,34 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	{
 		// update active view
 		if bm.selectedMenuEntry != -1 {
-			nm, cmd := bm.children[bm.selectedMenuEntry].Update(msg)
+			var childCmd tea.Cmd
+			var nm tea.Model
+			nm, childCmd = bm.children[bm.selectedMenuEntry].Update(msg)
+
 			bm.children[bm.selectedMenuEntry] = nm
+			cmds = append(cmds, childCmd)
 
-			if cmd != nil {
-				if batchCmds, ok := cmd().(tea.BatchMsg); ok {
-					for _, cmd := range batchCmds {
-						if _, ok := cmd().(BubbleMenuBackMsg); ok {
-							bm.ResetActiveView()
-						} else {
-							cmds = append(cmds, cmd)
-						}
-					}
-				} else if _, ok := cmd().(BubbleMenuBackMsg); ok {
+			switch mt := nm.(type) {
+			case BubbleMenu:
+				if mt.isShouldResetView {
+					mt.isShouldResetView = false
+					bm.children[bm.selectedMenuEntry] = mt
 					bm.ResetActiveView()
-				} else {
-					cmds = append(cmds, cmd)
 				}
-			}
-
-			if _, ok := nm.(BubbleMenu); !ok {
+			default:
+				// do nothing
 				if bm.HandleGoBackForChildren {
 					// handle specific events for children
 					switch msg := msg.(type) {
 					case tea.KeyMsg:
 						if key.Matches(msg, bm.keyMap.ExitView) {
 							bm.ResetActiveView()
+							return bm, tea.Batch(cmds...)
 						}
 					}
 				}
 			}
+
 			return bm, tea.Batch(cmds...)
 		}
 	}
@@ -193,7 +196,8 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			if key.Matches(msg, bm.keyMap.ExitView) {
 				bm.ResetActiveView()
-				return bm, BubbleMenuBack
+				bm.isShouldResetView = true
+				return bm, nil
 			}
 			if key.Matches(msg, bm.keyMap.ForceQuit) {
 				return bm, tea.Quit

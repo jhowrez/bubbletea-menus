@@ -5,6 +5,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	menus "github.com/jhowrez/bubbletea-menus"
 )
 
@@ -23,11 +24,20 @@ func main() {
 		menus.NewBubbleMenuEntry("Tool D", sampleModel, "Tooling D"),
 	)
 
+	subMenu3 := menus.NewBubbleMenu(
+		"Sub Menu 3",
+		menus.NewBubbleMenuEntry("Text Input", menus.NewBubbleMenu(
+			"Sub Sub Menu 1",
+			menus.NewBubbleMenuEntry("Text Input", newSlowTextInput(), "Is slow for some reason"),
+		), "Is slow for some reason"))
+
 	mainMenu := menus.NewBubbleMenu(
 		"Main Menu",
 		menus.NewBubbleMenuEntry("Sub Menu 1", subMenu1, "Tools for A and B"),
 		menus.NewBubbleMenuEntry("Sub Menu 2", subMenu2, "Tools for C and D"),
+		menus.NewBubbleMenuEntry("Sub Menu 3", subMenu3, "Text Input Model"),
 	)
+	mainMenu.SelectActiveView(2)
 
 	p := tea.NewProgram(ModelResetOnResize{Content: mainMenu},
 		tea.WithAltScreen(),
