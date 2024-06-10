@@ -154,9 +154,11 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			var childCmd tea.Cmd
 			var nm tea.Model
 			nm, childCmd = bm.children[bm.selectedMenuEntry].Update(msg)
-
 			bm.children[bm.selectedMenuEntry] = nm
-			cmds = append(cmds, childCmd)
+
+			if childCmd != nil {
+				cmds = append(cmds, childCmd)
+			}
 
 			switch mt := nm.(type) {
 			case BubbleMenu:
@@ -164,6 +166,7 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					mt.isShouldResetView = false
 					bm.children[bm.selectedMenuEntry] = mt
 					bm.ResetActiveView()
+					return bm, tea.Batch(cmds...)
 				}
 			default:
 				// do nothing

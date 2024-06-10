@@ -31,13 +31,23 @@ func main() {
 			menus.NewBubbleMenuEntry("Text Input", newSlowTextInput(), "Is slow for some reason"),
 		), "Is slow for some reason"))
 
-	mainMenu := menus.NewBubbleMenu(
-		"Main Menu",
+	menusList := []menus.BubbleMenuEntry{
 		menus.NewBubbleMenuEntry("Sub Menu 1", subMenu1, "Tools for A and B"),
 		menus.NewBubbleMenuEntry("Sub Menu 2", subMenu2, "Tools for C and D"),
 		menus.NewBubbleMenuEntry("Sub Menu 3", subMenu3, "Text Input Model"),
+	}
+
+	for range 100 {
+		menusList = append(menusList, menusList[0])
+
+	}
+
+	mainMenu := menus.NewBubbleMenu(
+		"Main Menu",
+		menusList...,
 	)
-	mainMenu.SelectActiveView(2)
+
+	//	mainMenu.SelectActiveView(2)
 
 	p := tea.NewProgram(ModelResetOnResize{Content: mainMenu},
 		tea.WithAltScreen(),
