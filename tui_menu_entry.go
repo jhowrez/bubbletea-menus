@@ -9,12 +9,33 @@ type BubbleMenuEntry struct {
 	Content     tea.Model
 	description string
 	menuIndex   int
+	selfHandled bool
 }
+
+type BubbleMenuEntryOption = func(*BubbleMenuEntry) *BubbleMenuEntry
 
 func (bm BubbleMenuEntry) Title() string       { return bm.Name }
 func (bm BubbleMenuEntry) Description() string { return bm.description }
 func (bm BubbleMenuEntry) FilterValue() string { return bm.Name }
+func (bm *BubbleMenuEntry) SetSelfHandled(sh bool) {
+	bm.selfHandled = sh
+}
 
-func NewBubbleMenuEntry(name string, content tea.Model, description string) BubbleMenuEntry {
+func (bm BubbleMenuEntry) IsSelfHandled() bool {
+	return bm.selfHandled
+}
+
+func NewBubbleMenuEntry(name string, content tea.Model, description string, options ...BubbleMenuEntryOption) BubbleMenuEntry {
 	return BubbleMenuEntry{Name: name, Content: content, description: description}
+}
+
+func WithSelfHandled() BubbleMenuEntryOption {
+	return func(bm *BubbleMenuEntry) *BubbleMenuEntry {
+		bm.selfHandled = true
+		return bm
+	}
+}
+
+type SelfHandledEntry interface {
+	IsSelfHandled() bool
 }

@@ -15,9 +15,12 @@ func main() {
 
 	subMenu1 := menus.NewBubbleMenu(
 		"Sub Menu 1",
-		menus.NewBubbleMenuEntry("Tool Other", handledModel, "Self handling model"),
+		menus.NewBubbleMenuEntry(
+			"Tool Other",
+			handledModel,
+			"Self handling model",
+		),
 	)
-	subMenu1.HandleGoBackForChildren = false
 
 	subMenu2 := menus.NewBubbleMenu(
 		"Sub Menu 2",

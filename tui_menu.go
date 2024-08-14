@@ -41,6 +41,8 @@ type BubbleMenu struct {
 
 	//
 	isShouldResetView bool
+
+	menuEntries []BubbleMenuEntry
 }
 
 func NewBubbleMenu(title string, children ...BubbleMenuEntry) BubbleMenu {
@@ -54,21 +56,20 @@ func NewBubbleMenu(title string, children ...BubbleMenuEntry) BubbleMenu {
 
 	menuEntryList := list.New(items, list.NewDefaultDelegate(), 0, 0)
 	menuEntryList.Title = title
-
 	menuEntryList.SetShowStatusBar(false)
 	menuEntryList.SetShowHelp(true)
 	menuEntryList.DisableQuitKeybindings()
 	menuEntryList.SetFilteringEnabled(true)
 
 	bm := BubbleMenu{
-		title:             title,
-		desc:              title,
-		children:          childrenContent,
-		menuEntryList:     menuEntryList,
-		selectedMenuEntry: -1,
-
+		title:                   title,
+		desc:                    title,
+		children:                childrenContent,
+		menuEntryList:           menuEntryList,
+		selectedMenuEntry:       -1,
 		HandleGoBackForChildren: true,
 		IsFilteringEnabled:      true,
+		menuEntries:             children,
 	}
 
 	{
@@ -164,7 +165,15 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			nm, childCmd = bm.children[bm.selectedMenuEntry].Update(msg)
 			bm.children[bm.selectedMenuEntry] = nm
 
-			if !bm.HandleGoBackForChildren {
+			var bmHandles = bm.HandleGoBackForChildren
+			var bmEntryHandles = bm.menuEntries[bm.selectedMenuEntry].IsSelfHandled()
+			var viewContentHandles = false
+
+			if h, ok := nm.(SelfHandledEntry); ok {
+				viewContentHandles = h.IsSelfHandled()
+			}
+
+			if bmEntryHandles || viewContentHandles {
 				switch msg.(type) {
 				case BubbleGoBackMsg:
 					bm.ResetActiveView()
@@ -186,8 +195,7 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			default:
 				// do nothing
-				if bm.HandleGoBackForChildren {
-					// handle specific events for children
+				if bmHandles && !viewContentHandles && !bmEntryHandles {
 					switch msg := msg.(type) {
 					case tea.KeyMsg:
 						if key.Matches(msg, bm.keyMap.ExitView) {

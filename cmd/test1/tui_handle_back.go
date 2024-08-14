@@ -20,6 +20,10 @@ func (m HandlerModel) Init() tea.Cmd {
 	return nil
 }
 
+func (m HandlerModel) IsSelfHandled() bool {
+	return true
+}
+
 func (bm HandlerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
