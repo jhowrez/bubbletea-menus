@@ -10,13 +10,14 @@ import (
 )
 
 func main() {
+	handledModel := NewHandlerModel()
 	sampleModel := NewSampleModel()
 
 	subMenu1 := menus.NewBubbleMenu(
 		"Sub Menu 1",
-		menus.NewBubbleMenuEntry("Tool A", sampleModel, "Tooling for Subsystem A"),
-		menus.NewBubbleMenuEntry("Tool B", sampleModel, "Tooling for Subsystem B"),
+		menus.NewBubbleMenuEntry("Tool Other", handledModel, "Self handling model"),
 	)
+	subMenu1.HandleGoBackForChildren = false
 
 	subMenu2 := menus.NewBubbleMenu(
 		"Sub Menu 2",
@@ -24,12 +25,15 @@ func main() {
 		menus.NewBubbleMenuEntry("Tool D", sampleModel, "Tooling D"),
 	)
 
+	subMenu4 := menus.NewBubbleMenu(
+		"Sub Sub Menu 1",
+		menus.NewBubbleMenuEntry("Self handling model", handledModel, "Is slow for some reason"),
+	)
 	subMenu3 := menus.NewBubbleMenu(
 		"Sub Menu 3",
-		menus.NewBubbleMenuEntry("Text Input", menus.NewBubbleMenu(
-			"Sub Sub Menu 1",
-			menus.NewBubbleMenuEntry("Text Input", newSlowTextInput(), "Is slow for some reason"),
-		), "Is slow for some reason"))
+		menus.NewBubbleMenuEntry("Sub Menu 4", subMenu4, "Nested self handling model"),
+		menus.NewBubbleMenuEntry("Text Input", newSlowTextInput(), "Is slow for some reason"),
+	)
 
 	menusList := []menus.BubbleMenuEntry{
 		menus.NewBubbleMenuEntry("Sub Menu 1", subMenu1, "Tools for A and B"),
@@ -37,7 +41,7 @@ func main() {
 		menus.NewBubbleMenuEntry("Sub Menu 3", subMenu3, "Text Input Model"),
 	}
 
-	for range 100 {
+	for range 0 {
 		menusList = append(menusList, menusList[0])
 
 	}
