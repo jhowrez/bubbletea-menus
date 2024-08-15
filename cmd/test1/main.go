@@ -21,6 +21,7 @@ func main() {
 			"Self handling model",
 		),
 	)
+	subMenu1.SelectActiveView(0)
 
 	subMenu2 := menus.NewBubbleMenu(
 		"Sub Menu 2",
@@ -53,6 +54,8 @@ func main() {
 		"Main Menu",
 		menusList...,
 	)
+
+	mainMenu.SelectActiveView(0)
 
 	//	mainMenu.SelectActiveView(2)
 

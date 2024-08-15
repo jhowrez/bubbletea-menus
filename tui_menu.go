@@ -11,14 +11,6 @@ import (
 
 // for list.Item compatibility
 
-type BubbleGoBackMsg struct{}
-
-func BubbleGoBack() tea.Cmd {
-	return func() tea.Msg {
-		return BubbleGoBackMsg{}
-	}
-}
-
 func (bm BubbleMenu) Title() string       { return bm.title }
 func (bm BubbleMenu) Description() string { return bm.desc }
 func (bm BubbleMenu) FilterValue() string { return bm.title }
