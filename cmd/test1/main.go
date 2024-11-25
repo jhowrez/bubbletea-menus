@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -40,6 +41,7 @@ func main() {
 	)
 
 	menusList := []menus.BubbleMenuEntry{
+		menus.NewBubbleMenuEntry("Spinner", newSpinnerModel(), "Spinner"),
 		menus.NewBubbleMenuEntry("Sub Menu 1", subMenu1, "Tools for A and B"),
 		menus.NewBubbleMenuEntry("Sub Menu 2", subMenu2, "Tools for C and D"),
 		menus.NewBubbleMenuEntry("Sub Menu 3", subMenu3, "Text Input Model"),
@@ -55,16 +57,21 @@ func main() {
 		menusList...,
 	)
 
-	mainMenu.SelectActiveView(0)
-
-	//	mainMenu.SelectActiveView(2)
+	// mainMenu.SelectActiveView(0)
 
 	p := tea.NewProgram(ModelResetOnResize{Content: mainMenu},
 		tea.WithAltScreen(),
 	)
 
-	if _, err := p.Run(); err != nil {
-		fmt.Println("Error running program:", err)
-		os.Exit(1)
-	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if _, err := p.Run(); err != nil {
+			fmt.Println("Error running program:", err)
+			os.Exit(1)
+		}
+	}()
+
+	wg.Wait()
 }

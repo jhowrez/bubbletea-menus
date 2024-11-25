@@ -36,10 +36,8 @@ func (bm HandlerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		bm.VP.Width = bm.ViewWidth
 		bm.VP.Height = bm.ViewHeight
 	case tea.KeyMsg:
-		if bm.list.FilterState() == list.FilterApplied {
-			if msg.String() == "esc" {
-				return bm, menus.BubbleGoBack()
-			}
+		if msg.String() == "esc" {
+			return bm, menus.BubbleGoBack()
 		}
 	}
 	bm.VP, cmd = bm.VP.Update(msg)

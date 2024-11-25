@@ -10,5 +10,4 @@ command:
 
 watch:
   folders:
-    - "."
-    - "./cmd/test1"
+    - "./**/*.go"

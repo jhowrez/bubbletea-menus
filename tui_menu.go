@@ -23,6 +23,8 @@ type BubbleMenu struct {
 	menuEntryList     list.Model
 	selectedMenuEntry int
 
+	lastActiveView int
+
 	// behaviour properties
 	ResetOnBack             bool
 	HandleGoBackForChildren bool
@@ -59,6 +61,7 @@ func NewBubbleMenu(title string, children ...BubbleMenuEntry) BubbleMenu {
 		children:                childrenContent,
 		menuEntryList:           menuEntryList,
 		selectedMenuEntry:       -1,
+		lastActiveView:          -1,
 		HandleGoBackForChildren: true,
 		IsFilteringEnabled:      true,
 		menuEntries:             children,
@@ -87,7 +90,14 @@ func NewBubbleMenu(title string, children ...BubbleMenuEntry) BubbleMenu {
 }
 
 func (bm BubbleMenu) Init() tea.Cmd {
-	return nil
+	cmds := []tea.Cmd{}
+	for i := range bm.children {
+		cmds = append(
+			cmds,
+			bm.children[i].Init(),
+		)
+	}
+	return tea.Batch(cmds...)
 }
 
 func (bm BubbleMenu) View() string {
@@ -114,6 +124,7 @@ func (bm *BubbleMenu) ResetActiveView() {
 		bm.menuEntryList.ResetSelected()
 	}
 	bm.selectedMenuEntry = -1
+	bm.lastActiveView = -1
 
 	if bm.IsFilteringEnabled {
 		bm.menuEntryList.SetFilteringEnabled(true)
@@ -151,9 +162,32 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	{
 		// update active view
+
 		if bm.selectedMenuEntry != -1 {
 			var childCmd tea.Cmd
 			var nm tea.Model
+
+			var bmIsInitOnHandle = bm.menuEntries[bm.selectedMenuEntry].IsInitOnEnter()
+			var viewContentInitOnEnter = false
+			if h, ok := bm.children[bm.selectedMenuEntry].(InitOnEnterEntry); ok {
+				viewContentInitOnEnter = h.IsInitOnEnter()
+			}
+
+			if viewContentInitOnEnter || bmIsInitOnHandle {
+				if bm.lastActiveView != bm.selectedMenuEntry {
+					childCmd = bm.children[bm.selectedMenuEntry].Init()
+					if childCmd != nil {
+						nm, childCmd = bm.children[bm.selectedMenuEntry].Update(childCmd())
+						if childCmd != nil {
+							cmds = append(cmds, childCmd)
+						}
+						bm.children[bm.selectedMenuEntry] = nm
+						childCmd = nil
+					}
+					bm.lastActiveView = bm.selectedMenuEntry
+				}
+			}
+
 			nm, childCmd = bm.children[bm.selectedMenuEntry].Update(msg)
 			bm.children[bm.selectedMenuEntry] = nm
 
