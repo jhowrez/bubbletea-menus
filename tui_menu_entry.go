@@ -13,7 +13,7 @@ type BubbleMenuEntry struct {
 	isInitOnEnter bool
 }
 
-type BubbleMenuEntryOption = func(*BubbleMenuEntry) *BubbleMenuEntry
+type BubbleMenuEntryOption = func(*BubbleMenuEntry)
 
 func (bm BubbleMenuEntry) Title() string       { return bm.Name }
 func (bm BubbleMenuEntry) Description() string { return bm.description }
@@ -31,20 +31,22 @@ func (bm BubbleMenuEntry) IsInitOnEnter() bool {
 }
 
 func NewBubbleMenuEntry(name string, content tea.Model, description string, options ...BubbleMenuEntryOption) BubbleMenuEntry {
-	return BubbleMenuEntry{Name: name, Content: content, description: description}
+	bm := BubbleMenuEntry{Name: name, Content: content, description: description}
+	for _, opt := range options {
+		opt(&bm)
+	}
+	return bm
 }
 
 func WithSelfHandled() BubbleMenuEntryOption {
-	return func(bm *BubbleMenuEntry) *BubbleMenuEntry {
+	return func(bm *BubbleMenuEntry) {
 		bm.selfHandled = true
-		return bm
 	}
 }
 
 func WithInitOnEnter() BubbleMenuEntryOption {
-	return func(bm *BubbleMenuEntry) *BubbleMenuEntry {
+	return func(bm *BubbleMenuEntry) {
 		bm.isInitOnEnter = true
-		return bm
 	}
 }
 
