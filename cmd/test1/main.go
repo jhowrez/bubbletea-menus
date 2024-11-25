@@ -57,7 +57,7 @@ func main() {
 		menusList...,
 	)
 
-	// mainMenu.SelectActiveView(0)
+	mainMenu.SelectActiveView(0)
 
 	p := tea.NewProgram(ModelResetOnResize{Content: mainMenu},
 		tea.WithAltScreen(),
