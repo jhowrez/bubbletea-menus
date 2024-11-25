@@ -1,7 +1,6 @@
 package menus
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -182,13 +181,11 @@ func (bm BubbleMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						childMsg := childCmd()
 						// log.Panicf("open=%T", childMsg)
 
-						strs := []string{}
 						switch cmdsB := childMsg.(type) {
 						case tea.BatchMsg:
 							for _, cmdbs := range cmdsB {
 								cmd0 := cmdbs()
 								bm.children[bm.selectedMenuEntry], childCmd = bm.children[bm.selectedMenuEntry].Update(cmd0)
-								strs = append(strs, fmt.Sprintf("%T ", cmd0))
 								if childCmd != nil {
 									cmds = append(cmds, childCmd)
 								}
